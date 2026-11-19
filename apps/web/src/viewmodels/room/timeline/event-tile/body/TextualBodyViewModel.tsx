@@ -6,7 +6,7 @@
  */
 
 import React, { type MouseEvent } from "react";
-import { MatrixEventEvent, MsgType, type MatrixEvent } from "matrix-js-sdk/src/matrix";
+import { MatrixEventEvent, MsgType, type MatrixEvent, User } from "matrix-js-sdk/src/matrix";
 import {
     BaseViewModel,
     TextualBodyViewBodyWrapperKind,
@@ -20,8 +20,9 @@ import Modal from "../../../../../Modal";
 import dis from "../../../../../dispatcher/dispatcher";
 import { _t } from "../../../../../languageHandler";
 import { IntegrationManagers } from "../../../../../integrations/IntegrationManagers";
-import { tryTransformPermalinkToLocalHref } from "../../../../../utils/permalinks/Permalinks";
+import { parsePermalink, tryTransformPermalinkToLocalHref } from "../../../../../utils/permalinks/Permalinks";
 import { Action } from "../../../../../dispatcher/actions";
+import { type ViewUserPayload } from "../../../../../dispatcher/payloads/ViewUserPayload";
 import QuestionDialog from "../../../../../components/views/dialogs/QuestionDialog";
 import MessageEditHistoryDialog from "../../../../../components/views/dialogs/MessageEditHistoryDialog";
 import { type TimelineRenderingType } from "../../../../../contexts/RoomContext";
@@ -282,6 +283,18 @@ export class TextualBodyViewModel
         }
 
         if (!target) {
+            return;
+        }
+
+        // User permalinks open the profile in the right panel rather than navigating away from the
+        // room, matching the behaviour of links in the message composer.
+        const permalink = parsePermalink(target.href);
+        if (permalink?.userId) {
+            event.preventDefault();
+            dis.dispatch<ViewUserPayload>({
+                action: Action.ViewUser,
+                member: new User(permalink.userId),
+            });
             return;
         }
 

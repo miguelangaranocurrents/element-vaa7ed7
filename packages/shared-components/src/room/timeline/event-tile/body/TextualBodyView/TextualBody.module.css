@@ -41,6 +41,12 @@
     display: flex;
 }
 
+/* The body is a flex item. Without this it cannot shrink below its min-content width, so a wide
+   non-wrapping child such as a code block would push the message text out of the tile. */
+.annotated > :first-child {
+    min-width: 0;
+}
+
 .annotatedInline {
     display: inline-flex;
 }
